@@ -1,3 +1,3 @@
 # nlp-final
 
-(discuss)[https://hackmd.io/GwZgZsAsAmYAwFoCsAjATAQwZA7BkCGwwSCAHGTlMNAJzQDGDkQA]
+[discuss](https://hackmd.io/GwZgZsAsAmYAwFoCsAjATAQwZA7BkCGwwSCAHGTlMNAJzQDGDkQA)

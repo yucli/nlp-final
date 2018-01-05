@@ -4,16 +4,13 @@ import math
 class Model():
 	def __init__(self, corpus):
 		self.corpus = dict(corpus)
-		self.num_of_movies = len(self.corpus['movie']) 
+		self.movie_num = len(self.corpus['movie'])
+		self.titles = list(self.corpus['movie'].keys()) # list type
+		self.terms_of_titles = [['不可能的', '任務'], ['露西']] # 斷詞後
+
 	
 	def score(self):
 		print('score')
-
-	def corpus(self):
-		return self.corpus
-	
-	def movie_num(self):
-		return self.num_of_movies
 
 class TermSelection(Model):
 	def __init__(self, corpus):
@@ -26,32 +23,42 @@ class TermSelection(Model):
 		return ['神鬼', '聯盟']
 
 class TermOrdering(Model):
-	def __init__(self, corpus):
+	def __init__(self, corpus, words):
 		super().__init__(corpus)
+		self.words = words
+		self.pos = {'N': ['飯', '麵'], 'V', ['吃']} # 將words依詞性分類
+
+	def gen_titles(self):
+		generated_titles = []
+		return generated_titles
 
 	def score(self):
 		super().score()
 
+	def gen_n_gram(self):
+		tri_gram = {}
+		trigram['(N, V)'] = 5
+		
+
 class TitleLength(Model):
-	def __init__(self, corpus, titles):
+	def __init__(self, corpus, generated_titles):
 		super().__init__(corpus)
-		self.titles = titles # list type
-		self.terms_of_titles = [['不可能的', '任務'], ['露西']]
+		self.generated_titles = generated_titles
 		self.lenterms_of_titles = [len(t) for t in self.title_terms]
 		self.lenchars_of_titles = [len(t) for t in self.titles]	
 		self.g1 = 1
 		self.g2 = 1
 
-	def gen_title():
-		scores = [score(t) for t in self.titles]
-		return self.titles[scores.index(max(scores))]
+	def gen_title(self):
+		scores = [self.score(t) for t in self.generated_titles]
+		return self.generated_titles[scores.index(max(scores))]
 
 	def score(self, title):
 		super().score()
-		terms = terms_of_titles[self.titles.index(title)]
+		terms = ['產生', '標題的', '斷', '詞']
 		lenterms = len(terms)
 		lenchars = len(title)
-		N = super().movie_num()
+		N = self.movie_num
 		P_term = same_lenterms_num(lenterms) / N
 		P_char = same_lenchars_num(lenchars) / N
 
@@ -70,4 +77,33 @@ class TitleLength(Model):
 			if lenterms == length:
 				num = num + 1
 		return num
+
+class TitleLength2(Model): # 暫時不用, 尚未完全
+	def __init__(self, corpus, titles):
+		super().__init__(corpus)
+		self.lenterms_of_titles = [len(t) for t in self.title_terms]
+		self.lenchars_of_titles = [len(t) for t in self.titles]
+
+	def get_maxlen_pairs(self):
+		maxlen_pairs = []
+		maxlen_terms = get_max_cnt_lengths(self.lenterms_of_titles)
+		maxlen_chars = get_max_cnt_lengths(self.lenchars_of_titles)
+		for lenterms in maxlen_terms:
+			for lenchars in maxlen_chars:
+				maxlen_pairs.append((lenterms, lenchars))
+		return maxlen_pairs
+
+	def get_maxcnt_lengths(self, lenelement_of_titles):
+		cnt = {}
+		maxcnt_lengths = []
+
+		for len in lenelement_of_titles:
+			cnt[len] = cnt.get(len, 0) + 1
+		
+		maxcnt = max(cnt.values())
+		for k, v in cnt.items():
+			if v == maxcnt:
+				maxcnt_lengths.append(k)
+
+		return maxcnt_lengths
 

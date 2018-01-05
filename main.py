@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from pkg.model import TermSelection as TS
 
 corpus = {

@@ -17,7 +17,7 @@ class TermSelection(Model):
 		generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]
 		return list(generated_words_num_test)
 
-class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於selected_words_num_test
+class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_words_num_test
 	def __init__(self, corpus):
 		super().__init__(corpus)
 		self.train_pos_distribution = {}
@@ -29,10 +29,10 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於selected_word
 		for tuple_pos_of_terms, count in self.train_pos_distribution.items():
 			self.train_pos_distribution[tuple_pos_of_terms] = count / self.movie_num
 		# 如 train_pos_distribution[('V', 'N')] = 5 / 54
-	def gen_terms_titles_num_test(self, selected_words_num_test, number_of_candidates):
+	def gen_terms_titles_num_test(self, generated_words_num_test, number_of_candidates):
 		generated_terms_titles_num_test = []
 		
-		for test in selected_words_num_test:
+		for test in generated_words_num_test:
 			classified_by_pos = {} # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
 			generated_terms_titles_num_test.append(self.gen_terms_titles(classified_by_pos = classified_by_pos, number_of_candidates = number_of_candidates)) # 如 [['毀滅', '聯盟'], ['相逢', '聯盟']]
 		

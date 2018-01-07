@@ -6,16 +6,29 @@ class Model():
 		self.corpus = dict(corpus)
 		self.movie_num = len(self.corpus['電影名'])
 		self.titles = list(self.corpus['電影名'].keys()) # list type
-		self.terms_of_titles = [self.corpus['電影名'][t]['電影名斷詞'] for t in titles] # 斷詞後
-		self.pos_of_terms_of_titles = [self.corpus['電影名'][t]['電影名斷詞詞性'] for t in titles] # 斷詞後
+		self.terms_of_titles = [self.corpus['電影名'][t]['斷詞'] for t in titles] # 斷詞後
+		self.pos_of_terms_of_titles = [self.corpus['電影名'][t]['斷詞詞性'] for t in titles] # 斷詞後
 
 class TermSelection(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
+		self.selection_score = {} # selection_score['聯盟'] == 9487
+		self.ne_score = 0 # 暫時
+		self.title_score = {}
+		self.nbl_score = {}
+		self.r_score = {}
+		
 
 	def gen_words_num_test(self, tf_idf_words_num_test, length):
 		generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]
 		return list(generated_words_num_test)
+	
+	def compute_selection_score(self, word):
+		self.selection_score[word] = self.ne_score + math.log(self.title_score[word] * self.nbl_score[word], 10) + self.r_score(word)
+
+	def compute_r_score(self, word):
+		self.r_score[word] =  
+
 
 class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_words_num_test
 	def __init__(self, corpus):
@@ -105,13 +118,12 @@ class TitleLength(Model):
 		generated_num_test = []
 
 		for test in generated_terms_of_titles_num_test:
-			scores = [self.compute_score(terms = terms) for terms in test]
+			scores = [self.get_len_score(terms = terms) for terms in test]
 			generated_num_test.append(''.join(test[scores.index(max(scores))]))
 		
 		return generated_num_test
 
-	def compute_score(self, terms):
-		super().score()
+	def get_len_score(self, terms):
 		title = ''.join(terms)
 		lenterms = len(terms)
 		lenchars = len(title)

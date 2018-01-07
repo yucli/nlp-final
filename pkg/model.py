@@ -17,17 +17,28 @@ class TermSelection(Model):
 		self.title_score = {}
 		self.nbl_score = {}
 		self.r_score = {}
-		
+
+	def construct_scores(self, words): # words即餵進來的重要words, 之後與tf_idf_words_num_test做處理
+		for word in words:
+			
 
 	def gen_words_num_test(self, tf_idf_words_num_test, length):
 		generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]
 		return list(generated_words_num_test)
 	
 	def compute_selection_score(self, word):
-		self.selection_score[word] = self.ne_score + math.log(self.title_score[word] * self.nbl_score[word], 10) + self.r_score(word)
+		if self.selection_score.get(word)
+		self.selection_score[word] = 
+			self.ne_score + math.log(self.title_score[word] * self.nbl_score[word], 10) + self.r_score(word)
+
+	def compute_title_score(self, word):
+		self.r_score[word] =  self.title_score[word] + self.nbl_score[]
+
+	def compute_nbl_score(self, word):
+		self.r_score[word] =  self.title_score[word] + self.nbl_score[]
 
 	def compute_r_score(self, word):
-		self.r_score[word] =  
+		self.r_score[word] =  self.title_score[word] + self.nbl_score[]
 
 
 class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_words_num_test

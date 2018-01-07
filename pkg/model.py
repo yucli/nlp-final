@@ -12,14 +12,15 @@ class Model():
 class TermSelection(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
+		self.words_info = self.corpus['詞訊']  # words_info之後與tf_idf_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
 		self.ne_score = 0 # 暫時
 		self.title_score = {}
 		self.nbl_score = {}
 		self.r_score = {}
 
-	def construct_scores(self, words): # words即餵進來的重要words, 之後與tf_idf_words_num_test做處理
-		for word in words:
+	def construct_scores(self):
+		for word in self.words_info.keys():
 			get_selection_score(word)	
 
 	def gen_words_num_test(self, tf_idf_words_num_test, length):
@@ -36,13 +37,15 @@ class TermSelection(Model):
 
 	def get_title_score(self, word):
 		if word not in self.title_score.keys():
-			self.title_score[word] = 
+			self.title_score[word] = (len(self.words_info[word]['詞在電影名']) + 1) \ 
+				/ len(self.words_info[word]['詞在電影字幕']) # 加1避免0在log的錯誤
 
 		return self.title_score[word]
 
 	def get_nbl_score(self, word):
 		if word not in self.nbl_score.keys():
-			self.nbl_score[word] =
+			self.nbl_score[word] = sum(self.words_info[word]['詞在電影字幕'].values()) \
+				* get_word_titles_word_subtitles_p(word)
 
 		return self.nbl_score[word]
 
@@ -52,6 +55,29 @@ class TermSelection(Model):
 				+ self.get_nbl_score(word)
 		
 		return self.r_score[word]
+
+	def get_word_titles_word_subtitles_p(self, word):
+		# 加1避免0在log的錯誤
+		numerator = 1
+		movies_name = []
+
+		for name in self.words_info[word]['詞在電影名'].keys():
+			if name not in movies_name:
+				movies_name.append(name)
+		
+		for name in self.words_info[word]['詞在電影字幕'].keys():
+			if name not in movies_name:
+				movies_name.append(name)
+		
+		for name in movies_name:
+			numerator += self.words_info[word]['詞在電影名'].get(name, 0) \
+				* self.words_info[word]['詞在電影字幕'].get(name, 0)
+
+		denominator = sum(self.words_info[word]['詞在電影字幕'].values())
+		
+		return numerator / denominator # 暫時有問題, 分母恆等於要相乘的另一項
+
+
 
 class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_words_num_test
 	def __init__(self, corpus):

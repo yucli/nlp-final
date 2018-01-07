@@ -23,7 +23,7 @@ corpus = {
     },
     '詞訊' = {
         '瑪莉': {
-            '詞性': 'N', # 應該可不用??放了避免發現哪裡有需要
+            '詞性': 'N',
             '命名實體': True,
             '詞在電影名': {
                 '瑪莉是瑪莉': 2
@@ -42,6 +42,7 @@ corpus = {
 tf_idf_words_10_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] # 10部測試電影, 共3000words
 
 TSModel = TS(corpus)
+TSModel.construct_scores()
 TOModel = TO(corpus)
 TLModel = TL(corpus)
 

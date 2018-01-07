@@ -4,15 +4,15 @@ import math
 class Model():
 	def __init__(self, corpus):
 		self.corpus = dict(corpus)
-		self.movie_num = len(self.corpus['電影名'])
-		self.titles = list(self.corpus['電影名'].keys()) # list type
-		self.terms_titles = [self.corpus['電影名'][t]['斷詞'] for t in titles] # 斷詞後
-		self.terms_pos_titles = [self.corpus['電影名'][t]['斷詞詞性'] for t in titles] # 斷詞後
+		self.movie_num = len(self.corpus['movie_title'])
+		self.titles = list(self.corpus['movie_title'].keys())
+		self.terms_titles = [self.corpus['movie_title'][t]['word'] for t in self.titles]
+		self.terms_pos_titles = [self.corpus['movie_title'][t]['pos'] for t in self.titles]
 
 class TermSelection(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
-		self.words_info = self.corpus['詞訊']  # words_info之後與tf_idf_words_num_test做處理
+		self.words_info = self.corpus['word_info']  # words_info之後與tf_idf_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
 		self.ne_score = 0 # 暫時
 		self.title_score = {}
@@ -21,7 +21,7 @@ class TermSelection(Model):
 
 	def construct_scores(self):
 		for word in self.words_info.keys():
-			get_selection_score(word)	
+			self.get_selection_score(word)	
 
 	def gen_words_num_test(self, tf_idf_words_num_test, length):
 		generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]
@@ -37,15 +37,13 @@ class TermSelection(Model):
 
 	def get_title_score(self, word):
 		if word not in self.title_score.keys():
-			self.title_score[word] = (len(self.words_info[word]['詞在電影名']) + 1) \ 
-				/ len(self.words_info[word]['詞在電影字幕']) # 加1避免0在log的錯誤
+			self.title_score[word] = (len(self.words_info[word]['word_in_title']) + 1) / len(self.words_info[word]['word_in_subs']) # 加1避免0在log的錯誤
 
 		return self.title_score[word]
 
 	def get_nbl_score(self, word):
 		if word not in self.nbl_score.keys():
-			self.nbl_score[word] = sum(self.words_info[word]['詞在電影字幕'].values()) \
-				* get_word_titles_word_subtitles_p(word)
+			self.nbl_score[word] = sum(self.words_info[word]['word_in_subs'].values()) * self.get_word_titles_word_subtitles_p(word)
 
 		return self.nbl_score[word]
 
@@ -61,19 +59,19 @@ class TermSelection(Model):
 		numerator = 1
 		movies_name = []
 
-		for name in self.words_info[word]['詞在電影名'].keys():
+		for name in self.words_info[word]['word_in_title'].keys():
 			if name not in movies_name:
 				movies_name.append(name)
 		
-		for name in self.words_info[word]['詞在電影字幕'].keys():
+		for name in self.words_info[word]['word_in_subs'].keys():
 			if name not in movies_name:
 				movies_name.append(name)
 		
 		for name in movies_name:
-			numerator += self.words_info[word]['詞在電影名'].get(name, 0) \
-				* self.words_info[word]['詞在電影字幕'].get(name, 0)
+			numerator += self.words_info[word]['word_in_title'].get(name, 0) \
+				* self.words_info[word]['word_in_subs'].get(name, 0)
 
-		denominator = sum(self.words_info[word]['詞在電影字幕'].values())
+		denominator = sum(self.words_info[word]['word_in_subs'].values())
 		
 		return numerator / denominator # 暫時有問題, 分母恆等於要相乘的另一項
 
@@ -86,8 +84,7 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_wor
 		
 		for terms_pos in self.terms_pos_titles:
 			tuple_terms_pos = tuple(terms_pos)
-			self.distro_pos[tuple_terms_pos] = self.distro_pos.get(tuple_terms_pos, 0) \ 
-				+ 1
+			self.distro_pos[tuple_terms_pos] = self.distro_pos.get(tuple_terms_pos, 0) + 1
 		
 		for tuple_terms_pos, count in self.distro_pos.items():
 			self.distro_pos[tuple_terms_pos] = count / self.movie_num

@@ -92,18 +92,20 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_wor
 	def gen_terms_titles_num_test(self, generated_words_num_test, candidates_number):
 		generated_terms_titles_num_test = []
 		
+		distro_pos_sorted_by_probability = sorted(self.distro_pos.items(), key = lambda d: d[1])
 		for test in generated_words_num_test:
 			classified_by_pos = {} # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
 			generated_terms_titles_num_test.append(self.gen_terms_titles(
 				classified_by_pos = classified_by_pos, 
-				candidates_number = candidates_number)) # 如 [['毀滅', '聯盟'], ['相逢', '聯盟']]
+				candidates_number = candidates_number,
+				distro_pos_sorted_by_probability = distro_pos_sorted_by_probability))
 		
 		return list(generated_terms_titles_num_test)
 
-	def gen_terms_titles(self, classified_by_pos, candidates_number):
-		terms_titles = []
-		
-		for ordered_pos, probability in self.distro_pos.items():
+	def gen_terms_titles(self, classified_by_pos, candidates_number, distro_pos_sorted_by_probability):
+		terms_titles = [] # 如 [['毀滅', '聯盟'], ['相逢', '聯盟']]
+
+		for ordered_pos, probability in distro_pos_sorted_by_probability:
 			ordered_pos_needed_number = int(candidates_number * probability)
 			terms_titles.extend(self.gen_needed_terms_titles(
 				classified_by_pos = classified_by_pos, 
@@ -111,10 +113,15 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_wor
 				ordered_pos_needed_number = ordered_pos_needed_number))
 
 		if len(terms_titles) == 0:
-			for ordered_pos, probability in self.distro_pos.items():
+			for ordered_pos, probability in distro_pos_sorted_by_probability:
 				ordered_pos_needed_number = int(candidates_number * probability)
-				for pos_words in classified_by_pos:
-					terms_titles.extend(pos_words[:ordered_pos_needed_number])
+				last_pos = ordered_pos[-1] # 假如最後的字較重要
+				last_pos_words = classified_by_pos[last_pos]
+				needed_number_last_pos_words = last_pos_words[:ordered_pos_needed_number]
+				for word in needed_number_last_pos_words:
+					word_term_title = list(word)
+					if word_term_title not in terms_titles:
+						terms_titles.append(word_term_title)
 
 		return terms_titles
 
@@ -148,7 +155,7 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_wor
 				for time in range(iterate_times):
 					start = (time * every_length) + (i * in_length)
 					end = (time * every_length) + ((i + 1) * in_length)
-					insert_positions.extend(list(range(start, end)))
+					insert_positions.extend(list(range(start, end))) # argument can be range(start, end)
 
 				for position in insert_positions:
 					generated_needed_terms_titles[position].insert(0, word)

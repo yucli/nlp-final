@@ -77,7 +77,7 @@ class TermSelection(Model):
 
 
 
-class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_words_num_test
+class TermOrdering(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
 		self.distro_pos = {} # distro means distribution
@@ -94,13 +94,24 @@ class TermOrdering(Model): # classified_by_pos 尚未, 得依賴於generated_wor
 		
 		distro_pos_sorted_by_probability = sorted(self.distro_pos.items(), key = lambda d: d[1])
 		for test in generated_words_num_test:
-			classified_by_pos = {} # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
+			classified_by_pos = self.gen_classified_by_pos(test) # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
 			generated_terms_titles_num_test.append(self.gen_terms_titles(
 				classified_by_pos = classified_by_pos, 
 				candidates_number = candidates_number,
 				distro_pos_sorted_by_probability = distro_pos_sorted_by_probability))
 		
 		return list(generated_terms_titles_num_test)
+
+	def gen_classified_by_pos(self, test):
+		generated_classified_by_pos = {}
+
+		for word, pos in test:
+			if pos not in generated_classified_by_pos.keys():
+				generated_classified_by_pos[pos] = list(word)
+			else:
+				generated_classified_by_pos[pos].append(word)
+
+		return generated_classified_by_pos
 
 	def gen_terms_titles(self, classified_by_pos, candidates_number, distro_pos_sorted_by_probability):
 		terms_titles = [] # 如 [['毀滅', '聯盟'], ['相逢', '聯盟']]

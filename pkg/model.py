@@ -10,8 +10,9 @@ class Model():
 		self.terms_pos_titles = [self.corpus['movie_title'][t]['pos'] for t in self.titles]
 
 class TermSelection(Model):
-	def __init__(self, corpus):
-		super().__init__(corpus, w2v_model)
+	def __init__(self, corpus, w2v_model):
+		super().__init__(corpus)
+		self.w2v_model = w2v_model
 		self.words_info = self.corpus['word_info']  # words_info之後與text_rank_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
 		self.ne_score = 0 # 暫時
@@ -19,7 +20,6 @@ class TermSelection(Model):
 		self.nbl_score = {}
 		self.r_score = {}
 		self.construct_scores()
-		self.w2v_model = w2v_model
 
 	def gen_words_num_test(self, text_rank_words_num_test, each_trained_words_num):
 		generated_words_num_test = []

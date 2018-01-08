@@ -17,18 +17,17 @@ print(pf(corpus, indent = 4))
 print(len(corpus['word_info'])) # term count
 
 filename = []
-
+w2v_model # word2vec model
 
 """
-TSModel = TS(corpus)
-TSModel.construct_scores()
+TSModel = TS(corpus, w2v_model)
 TOModel = TO(corpus)
 TLModel = TL(corpus)
 
-tf_idf_words_10_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] # 10部測試電影, 共3000words
+text_rank_words_10_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] # 10部測試電影依順序, 共3000words
 
-generated_words_10_test = TSModel.gen_words_num_test(tf_idf_words_10_test, 100)
-generated_terms_titles_10_test = TOModel.gen_terms_titles_num_test(generated_words_10_test, 200)
+generated_words_10_test = TSModel.gen_words_num_test(text_rank_words_10_test, each_trained_words_num = 5)
+generated_terms_titles_10_test = TOModel.gen_terms_titles_num_test(generated_words_10_test, candidates_num = 120)
 generated_title_10_test = TLModel.gen_title_num_test(generated_terms_titles_10_test)
 
 with open('output.txt', 'w', encoding = 'UTF-8') as fw:

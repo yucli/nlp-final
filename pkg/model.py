@@ -11,46 +11,79 @@ class Model():
 
 class TermSelection(Model):
 	def __init__(self, corpus):
-		super().__init__(corpus)
-		self.words_info = self.corpus['word_info']  # words_info之後與tf_idf_words_num_test做處理
+		super().__init__(corpus, w2v_model)
+		self.words_info = self.corpus['word_info']  # words_info之後與text_rank_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
 		self.ne_score = 0 # 暫時
 		self.title_score = {}
 		self.nbl_score = {}
 		self.r_score = {}
+		self.construct_scores()
+		self.w2v_model = w2v_model
+
+	def gen_words_num_test(self, text_rank_words_num_test, each_trained_words_num):
+		generated_words_num_test = []
+		trained_words = self.get_highest_scores_words(each_trained_words_num = each_trained_words_num)
+		test_words_num = each_trained_words_num * 3
+		
+		for test in text_rank_words_num_test:
+			generated_words_num_test.append(self.gen_words(
+				test = test, 
+				test_words_num = test_words_num, 
+				trained_words = trained_words))
+
+		# generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]		
+
+		return list(generated_words_num_test)
+
+	def gen_words(self, test, test_words_num, trained_words):
+		generated_words = self.gen_words_sorted_by_similarity(test = test, trained_words = trained_words)
+		return generated_words[:test_words_num]
+
+	def gen_words_sorted_by_similarity(self, test, trained_words):
+		generated_words_sorted_by_similarity = []
+		temp_dictionary = {}
+		
+		for word, pos in test:
+			for trained_word in trained_words:
+				temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
+		
+		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reversed = True)
+		generated_words_sorted_by_similarity = [(triple_cos[0][0], triple_cos[0][1]) for triple_cos in temp_sorted_list] # tripler_cos == (('w', 'w_pos', 'test_w'), cos_value)
+		return generated_words_sorted_by_similarity
 
 	def construct_scores(self):
 		for word in self.words_info.keys():
-			self.get_selection_score(word)	
-
-	def gen_words_num_test(self, tf_idf_words_num_test, length):
-		generated_words_num_test = [[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []]
-		return list(generated_words_num_test)
+			self.get_selection_score(word)
+	
+	def get_highest_scores_words(self, each_trained_words_num):
+		scores_words_sorted_by_score = sorted(self.selection_score.items(), lambda d: d[1], reverse = True)
+		words_num = self.movie_num * each_words_num
+		return scores_words_sorted_by_score[:words_num]
 	
 	def get_selection_score(self, word):
 		if word not in self.selection_score.keys():
 			self.selection_score[word] = self.ne_score \
-				+ math.log(self.get_title_score(word) * self.get_nbl_score(word), 10) \
-				+ self.get_r_score(word)
+				+ math.log(self.get_title_score(word = word) * self.get_nbl_score(word = word), 10) \
+				+ self.get_r_score(word = word)
 		
 		return self.selection_score[word]
 
 	def get_title_score(self, word):
 		if word not in self.title_score.keys():
-			self.title_score[word] = (len(self.words_info[word]['word_in_title']) + 1) / len(self.words_info[word]['word_in_subs']) # 加1避免0在log的錯誤
+			self.title_score[word] = (len(self.words_info[word]['word_in_titles']) + 1) / len(self.words_info[word]['word_in_subs']) # 加1避免0在log的錯誤
 
 		return self.title_score[word]
 
 	def get_nbl_score(self, word):
 		if word not in self.nbl_score.keys():
-			self.nbl_score[word] = sum(self.words_info[word]['word_in_subs'].values()) * self.get_word_titles_word_subtitles_p(word)
+			self.nbl_score[word] = sum(self.words_info[word]['word_in_subs'].values()) * self.get_word_titles_word_subtitles_p(word = word)
 
 		return self.nbl_score[word]
 
 	def get_r_score(self, word):
 		if word not in self.r_score.keys():
-			self.r_score[word] =  self.get_title_score(word) \
-				+ self.get_nbl_score(word)
+			self.r_score[word] =  self.get_title_score(word = word) + self.get_nbl_score(word = word)
 		
 		return self.r_score[word]
 
@@ -59,7 +92,7 @@ class TermSelection(Model):
 		numerator = 1
 		movies_name = []
 
-		for name in self.words_info[word]['word_in_title'].keys():
+		for name in self.words_info[word]['word_in_titles'].keys():
 			if name not in movies_name:
 				movies_name.append(name)
 		
@@ -68,14 +101,12 @@ class TermSelection(Model):
 				movies_name.append(name)
 		
 		for name in movies_name:
-			numerator += self.words_info[word]['word_in_title'].get(name, 0) \
+			numerator += self.words_info[word]['word_in_titles'].get(name, 0) \
 				* self.words_info[word]['word_in_subs'].get(name, 0)
 
 		denominator = sum(self.words_info[word]['word_in_subs'].values())
 		
 		return numerator / denominator # 暫時有問題, 分母恆等於要相乘的另一項
-
-
 
 class TermOrdering(Model):
 	def __init__(self, corpus):
@@ -89,15 +120,15 @@ class TermOrdering(Model):
 		for tuple_terms_pos, count in self.distro_pos.items():
 			self.distro_pos[tuple_terms_pos] = count / self.movie_num
 		# 如 distro_pos[('V', 'N')] = 5 / 54
-	def gen_terms_titles_num_test(self, generated_words_num_test, candidates_number):
+	def gen_terms_titles_num_test(self, generated_words_num_test, candidates_num):
 		generated_terms_titles_num_test = []
 		
-		distro_pos_sorted_by_probability = sorted(self.distro_pos.items(), key = lambda d: d[1])
+		distro_pos_sorted_by_probability = sorted(self.distro_pos.items(), key = lambda d: d[1], reverse = True)
 		for test in generated_words_num_test:
-			classified_by_pos = self.gen_classified_by_pos(test) # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
+			classified_by_pos = self.gen_classified_by_pos(test = test) # 如{'V': ['毀滅', '相逢'], 'N', ['聯盟']} 將words依詞性分類, 且其有相似度的順序
 			generated_terms_titles_num_test.append(self.gen_terms_titles(
 				classified_by_pos = classified_by_pos, 
-				candidates_number = candidates_number,
+				candidates_num = candidates_num,
 				distro_pos_sorted_by_probability = distro_pos_sorted_by_probability))
 		
 		return list(generated_terms_titles_num_test)
@@ -113,30 +144,30 @@ class TermOrdering(Model):
 
 		return generated_classified_by_pos
 
-	def gen_terms_titles(self, classified_by_pos, candidates_number, distro_pos_sorted_by_probability):
+	def gen_terms_titles(self, classified_by_pos, candidates_num, distro_pos_sorted_by_probability):
 		terms_titles = [] # 如 [['毀滅', '聯盟'], ['相逢', '聯盟']]
 
 		for ordered_pos, probability in distro_pos_sorted_by_probability:
-			ordered_pos_needed_number = int(candidates_number * probability)
+			ordered_pos_needed_num = int(candidates_num * probability)
 			terms_titles.extend(self.gen_needed_terms_titles(
 				classified_by_pos = classified_by_pos, 
 				ordered_pos = ordered_pos, 
-				ordered_pos_needed_number = ordered_pos_needed_number))
+				ordered_pos_needed_num = ordered_pos_needed_num))
 
 		if len(terms_titles) == 0:
 			for ordered_pos, probability in distro_pos_sorted_by_probability:
-				ordered_pos_needed_number = int(candidates_number * probability)
+				ordered_pos_needed_num = int(candidates_num * probability)
 				last_pos = ordered_pos[-1] # 假如最後的字較重要
 				last_pos_words = classified_by_pos[last_pos]
-				needed_number_last_pos_words = last_pos_words[:ordered_pos_needed_number]
-				for word in needed_number_last_pos_words:
+				needed_num_last_pos_words = last_pos_words[:ordered_pos_needed_num]
+				for word in needed_num_last_pos_words:
 					word_term_title = list(word)
 					if word_term_title not in terms_titles:
 						terms_titles.append(word_term_title)
 
 		return terms_titles
 
-	def gen_needed_terms_titles(self, classified_by_pos, ordered_pos, ordered_pos_needed_number):
+	def gen_needed_terms_titles(self, classified_by_pos, ordered_pos, ordered_pos_needed_num):
 		generated_needed_terms_titles = []
 		
 		each_pos_words_length = []
@@ -146,8 +177,8 @@ class TermOrdering(Model):
 			each_pos_words_length.append(len(classified_by_pos[pos]))
 		
 		generated_needed_terms_titles_length = 1
-		for number in range(len(each_pos_words_length)):
-			generated_needed_terms_titles_length *= number
+		for num in range(len(each_pos_words_length)):
+			generated_needed_terms_titles_length *= num
 
 		for i in range(generated_needed_terms_titles_length):
 			generated_needed_terms_titles.append([])
@@ -174,7 +205,7 @@ class TermOrdering(Model):
 			# 完
 			every_length = in_length # 更新基礎
 			
-		return generated_needed_terms_titles[:ordered_pos_needed_number]
+		return generated_needed_terms_titles[:ordered_pos_needed_num]
 
 class TitleLength(Model):
 	def __init__(self, corpus):

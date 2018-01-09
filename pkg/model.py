@@ -204,7 +204,15 @@ class TermOrdering(Model):
 
 			# 完
 			every_length = in_length # 更新基礎
-			
+
+		# remove duplicate words
+		for title_i in range(len(generated_needed_terms_titles)):
+			for word in generated_needed_terms_titles[title_i]:
+				if generated_needed_terms_titles[title_i].count(word) > 1:
+					generated_needed_terms_titles[title_i]
+					break
+		generated_needed_terms_titles = [t for t in generated_needed_terms_titles if t != []]
+		
 		return generated_needed_terms_titles[:ordered_pos_needed_num]
 
 class TitleLength(Model):

@@ -2,6 +2,7 @@
 import os
 import glob
 import json
+import logging
 from pprint import pformat as pf
 from pkg.model import TermSelection as TS
 from pkg.model import TermOrdering as TO
@@ -14,7 +15,7 @@ def get_corpus():
     with open('corpus.json', 'r', encoding = 'UTF-8') as fr:
         json_corpus = json.load(fr)
 
-    print('Get trainning corpus')
+    logging.info('Get trainning corpus')
     return json_corpus
 
 def get_files():
@@ -23,10 +24,11 @@ def get_files():
     files = [os.path.basename(path) for path in path_files]
     return files
 
-def get_text_rank_words_10_test(files): # files is a list of files
+def get_text_rank_words_10_test(files):
+    pass
 
 def get_sentences(): # get sentences to be trained in w2v_model
-    
+    pass
 
 def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sentence'], ['second', 'sentence']]
     w2v_model = models.Word2Vec.load('med250.model.bin')
@@ -37,16 +39,17 @@ def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sent
     w2v_model.build_vocab(sentence, update=True) # 訓練該行
     w2v_model.train(sentence)
     """
-    print('Get word2vec model')
+    logging.info('Get word2vec model')
     return w2v_model
 
-def pause_for_start_to_generate_titles()
+def pause_for_start_to_generate_titles():
     start = input()
     while start != 'start':
         start = input()
-    print('Generate titles')
+    logging.info('Generate titles')
 
 def main():
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     corpus = get_corpus()
     # print(pf(corpus, indent = 4))
     # print(len(corpus['word_info'])) # term count
@@ -60,7 +63,7 @@ def main():
     TSModel = TS(corpus, w2v_model)
     TOModel = TO(corpus)
     TLModel = TL(corpus)
-    print('Construct models: term selection, term ordering, title length')
+    logging.info('Construct models: term selection, term ordering, title length')
 
     pause_for_start_to_generate_titles()
 
@@ -72,7 +75,7 @@ def main():
         for i in range(len(generated_title_10_test)):
             print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
-        print('Write to ouput.txt')
+        logging.info('Write to ouput.txt')
 
 
 if __name__ == "__main__":

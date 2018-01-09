@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 import glob
+import jieba.analyse as analyse
+import jieba.posseg as pseg
 import json
 import logging
+import pysrt
 from pprint import pformat as pf
 from pkg.model import TermSelection as TS
 from pkg.model import TermOrdering as TO
@@ -25,20 +28,59 @@ def get_files():
     return files
 
 def get_text_rank_words_10_test(files):
-    pass
+    EXTRACT_POS = ['n', 'nr', 'ns', 'nt', 'nz', 'ng', 'v', 'vg', 'vd', 'vn', 'nr', 'ns', 'nt', 'nz']
+    words_list = []
 
-def get_sentences(): # get sentences to be trained in w2v_model
-    pass
+    for file in files:
+        srt = pysrt.open(file, encoding='utf-8')
+        # Write the lines to a .txt file
+        with open('srt_lines.txt', 'w') as srt_txt:
+            for i in range(len(srt)):
+                srt_txt.write(srt[i].text.encode('utf-8') + '\n')
+
+        textrank = analyse.textrank
+        content = open('srt_lines.txt', 'rb').read()
+        keywords = textrank(content, topK = 30, allowPOS = (EXTRACT_POS))
+
+        keywords_per_movie = []
+        # Do posseg to each keywords to get their pos taggings
+        for word in keywords:
+            words = pseg.cut(w)
+            for word, flag in words:
+                if flag in NOUN:
+                    pos = 'n'
+                elif flag in VERB:
+                    pos = 'v'
+                else:
+                    pos = flag
+                keywords_per_movie.append((word, pos))
+        words_list.append(keywords_per_movie)
+    
+    return words_list
+
+def get_sentences(files): # get sentences to be trained in w2v_model
+    NO_NEED = ['x', 'eng', 'w', 'm', 'mq', 'mg']
+    sentences = []
+    for file in files:
+        srt = pysrt.open(file, encoding = 'utf-8')
+        for i in range(len(srt)):
+            line = srt[i].text.encode('utf-8')
+            words = pseg.cut(line)
+            sentence = []
+            for word, flag in words:
+                if flag not in NO_NEED:
+                    sentence.append(word)
+            sentences.append(sentence)
+    
+    return sentences
 
 def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sentence'], ['second', 'sentence']]
     w2v_model = models.Word2Vec.load('med250.model.bin')
-    # add new words, retrain
-    """
-    sentence = []
-    sentence.append(line.split(' ')) # 尚未
-    w2v_model.build_vocab(sentence, update=True) # 訓練該行
-    w2v_model.train(sentence)
-    """
+    # Train the model again with new sentences
+    for sentence in sentences:
+        model.build_vocab(sentence, update=True)
+        model.train(sentence)
+ 
     logging.info('Get word2vec model')
     return w2v_model
 
@@ -55,9 +97,9 @@ def main():
     # print(len(corpus['word_info'])) # term count
 
     files = get_files() # files = ['1.srt', '2.srt', '3.srt']
-    text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共3000words
+    text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共300words
     
-    sentences = get_sentences()
+    sentences = get_sentences(files = files)
     w2v_model = get_w2v_model(sentences = sentences)
     
     TSModel = TS(corpus, w2v_model)

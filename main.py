@@ -24,9 +24,11 @@ def get_files():
     return files
 
 def get_text_rank_words_10_test(files): # files is a list of files
+
+def get_sentences(): # get sentences to be trained in w2v_model
     
 
-def get_w2v_model(corpus, text_rank_words_10_test): # get word2vec model, 參數可能要改成句子們
+def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sentence'], ['second', 'sentence']]
     w2v_model = models.Word2Vec.load('med250.model.bin')
     # add new words, retrain
     """
@@ -51,7 +53,9 @@ def main():
 
     files = get_files() # files = ['1.srt', '2.srt', '3.srt']
     text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共3000words
-    w2v_model = get_w2v_model(corpus = corpus, text_rank_words_10_test = text_rank_words_10_test)
+    
+    sentences = get_sentences()
+    w2v_model = get_w2v_model(sentences = sentences)
     
     TSModel = TS(corpus, w2v_model)
     TOModel = TO(corpus)

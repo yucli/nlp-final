@@ -13,11 +13,12 @@ class TermSelection(Model):
 	def __init__(self, corpus, w2v_model):
 		super().__init__(corpus)
 		self.w2v_model = w2v_model
-		self.words_info = self.corpus['word_info']  # words_info之後與text_rank_words_num_test做處理
+		self.word_info = self.corpus['word_info']  # word_info之後與text_rank_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
-		self.ne_score = 0 # 暫時
+		self.pos_score = 0.08 # 給pos分, 目前假如是n, v
+		self.ne_score = 0.2 # 暫時
 		self.title_score = {}
-		self.nbl_score = {}
+		self.g_score = {} # 自己的nbl變形
 		self.r_score = {}
 		self.construct_scores()
 
@@ -53,7 +54,7 @@ class TermSelection(Model):
 		return generated_words_sorted_by_similarity
 
 	def construct_scores(self):
-		for word in self.words_info.keys():
+		for word in self.word_info.keys():
 			self.get_selection_score(word)
 	
 	def get_highest_scores_words(self, each_trained_words_num):
@@ -63,50 +64,66 @@ class TermSelection(Model):
 	
 	def get_selection_score(self, word):
 		if word not in self.selection_score.keys():
-			self.selection_score[word] = self.ne_score \
-				+ math.log(self.get_title_score(word = word) * self.get_nbl_score(word = word), 10) \
+			self.selection_score[word] = self.get_pos_score(word) \
+				+ self.get_ne_score(word) \
+				+ math.log(self.get_title_score(word = word) * self.get_g_score(word = word), 10) \
 				+ self.get_r_score(word = word)
 		
 		return self.selection_score[word]
 
+	def get_pos_score(self, word):
+		if self.word_info[word]['pos'] in ['n', 'v']:
+			return self.pos_score
+		else:
+			return 0
+
+	def get_ne_score(self, word):
+		if self.word_info[word]['ne'] == True:
+			return self.ne_score
+		else:
+			return 0
+
 	def get_title_score(self, word):
 		if word not in self.title_score.keys():
-			self.title_score[word] = (len(self.words_info[word]['word_in_titles']) + 1) / len(self.words_info[word]['word_in_subs']) # 加1避免0在log的錯誤
+			self.title_score[word] = (len(self.word_info[word]['word_in_titles']) + 1) / (len(self.word_info[word]['word_in_subs']) + 1)# 各加1避免0在log的錯誤
 
 		return self.title_score[word]
 
-	def get_nbl_score(self, word):
-		if word not in self.nbl_score.keys():
-			self.nbl_score[word] = sum(self.words_info[word]['word_in_subs'].values()) * self.get_word_titles_word_subtitles_p(word = word)
+	def get_g_score(self, word):
+		if word not in self.g_score.keys():
+			self.g_score[word] = self.get_g_score_numerator(word = word) / self.get_g_score_denominator(word = word)
 
-		return self.nbl_score[word]
+		return self.g_score[word]
 
 	def get_r_score(self, word):
 		if word not in self.r_score.keys():
-			self.r_score[word] =  self.get_title_score(word = word) + self.get_nbl_score(word = word)
+			self.r_score[word] =  self.get_title_score(word = word) + self.get_g_score(word = word)
 		
 		return self.r_score[word]
 
-	def get_word_titles_word_subtitles_p(self, word):
+	def get_g_score_numerator(self, word):
 		# 加1避免0在log的錯誤
 		numerator = 1
 		movies_name = []
 
-		for name in self.words_info[word]['word_in_titles'].keys():
+		for name in self.word_info[word]['word_in_titles'].keys():
 			if name not in movies_name:
 				movies_name.append(name)
 		
-		for name in self.words_info[word]['word_in_subs'].keys():
+		for name in self.word_info[word]['word_in_subs'].keys():
 			if name not in movies_name:
 				movies_name.append(name)
 		
 		for name in movies_name:
-			numerator += self.words_info[word]['word_in_titles'].get(name, 0) \
-				* self.words_info[word]['word_in_subs'].get(name, 0)
-
-		denominator = sum(self.words_info[word]['word_in_subs'].values())
+			numerator += self.word_info[word]['word_in_titles'].get(name, 0) \
+				* self.word_info[word]['word_in_subs'].get(name, 0)
 		
-		return numerator / denominator # 暫時有問題, 分母恆等於要相乘的另一項
+		return numerator
+
+	def get_g_score_denominator(self, word):
+		denominator = len(self.word_info[word]['word_in_subs']) + 1
+		return denominator
+
 
 class TermOrdering(Model):
 	def __init__(self, corpus):

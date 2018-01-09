@@ -1,0 +1,4 @@
+# word2vec models
+med250.model.bin
+med250.model.bin.syn1neg.npy
+med250.model.bin.wv.syn0.npy

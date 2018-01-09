@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import glob
 import json
 from pprint import pformat as pf
 from pkg.model import TermSelection as TS
@@ -16,10 +17,13 @@ def get_corpus():
     print('Get trainning corpus')
     return json_corpus
 
-def get_filenames():
-    filenames = []
+def get_files():
+    files = []
+    path_files = glob.glob(os.path.join('input', '*.srt'))
+    files = [os.path.basename(path) for path in path_files]
+    return files
 
-def get_text_rank_words_10_test(filenames): # filenames is a list of files
+def get_text_rank_words_10_test(files): # files is a list of files
     
 
 def get_w2v_model(corpus, text_rank_words_10_test): # get word2vec model, 參數可能要改成句子們
@@ -45,8 +49,8 @@ def main():
     # print(pf(corpus, indent = 4))
     # print(len(corpus['word_info'])) # term count
 
-    filenames = get_filenames()
-    text_rank_words_10_test = get_text_rank_words_10_test(filenames = filenames)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共3000words
+    files = get_files() # files = ['1.srt', '2.srt', '3.srt']
+    text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共3000words
     w2v_model = get_w2v_model(corpus = corpus, text_rank_words_10_test = text_rank_words_10_test)
     
     TSModel = TS(corpus, w2v_model)
@@ -62,8 +66,8 @@ def main():
 
     with open('output.txt', 'w', encoding = 'UTF-8') as fw:
         for i in range(len(generated_title_10_test)):
-            print(filenames[i], generated_title_10_test[i], sep = '\t')
-            fw.write('\t'.join([filenames[i], generated_title_10_test[i]]) + '\n')
+            print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
+            fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
         print('Write to ouput.txt')
 
 

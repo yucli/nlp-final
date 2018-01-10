@@ -44,10 +44,13 @@ class TermSelection(Model):
 		
 		for word, pos in test:
 			for trained_word in trained_words:
-				temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
+				try:
+					temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
+				except KeyError:
+					temp_dictionary[(word, pos, trained_word)] = 0
 				# print(word, trained_word, temp_dictionary[(word, pos, trained_word)])
 		
-		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reversed = True)
+		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reverse = True)
 		generated_words_sorted_by_similarity = [(triple_cos[0][0], triple_cos[0][1]) for triple_cos in temp_sorted_list] # tripler_cos == (('w', 'w_pos', 'test_w'), cos_value)
 		return generated_words_sorted_by_similarity
 

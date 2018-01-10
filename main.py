@@ -121,23 +121,23 @@ def main():
 
     files = get_files() # files = ['1.srt', '2.srt', '3.srt']
     text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共300words
-    # keywords = get_keywords(corpus, text_rank_words_10_test)
+    keywords = get_keywords(corpus, text_rank_words_10_test)
 
-    # sentences = get_sentences(files = files, keywords = keywords)
+    sentences = get_sentences(files = files, keywords = keywords)
     # print(text_rank_words_10_test)
     # print(sentences)
     
-    # w2v_model = get_w2v_model(sentences = sentences)
+    w2v_model = get_w2v_model(sentences = sentences)
     
-    # TSModel = TS(corpus, w2v_model)
+    TSModel = TS(corpus, w2v_model)
     TOModel = TO(corpus)
     TLModel = TL(corpus)
     # logging.info('Construct 3 models')
 
     pause_for_start_to_generate_titles()
 
-    # generated_words_10_test = TSModel.gen_words_num_test(text_rank_words_10_test, each_trained_words_num = 5)
-    generated_words_10_test = text_rank_words_10_test
+    generated_words_10_test = TSModel.gen_words_num_test(text_rank_words_10_test, each_trained_words_num = 5)
+    # generated_words_10_test = text_rank_words_10_test
     generated_terms_titles_10_test = TOModel.gen_terms_titles_num_test(generated_words_10_test, candidates_num = 120)
     generated_title_10_test = TLModel.gen_title_num_test(generated_terms_titles_10_test)
 

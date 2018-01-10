@@ -60,7 +60,17 @@ def get_text_rank_words_10_test(files):
     
     return words_list
 
-def get_sentences(files): # get sentences to be trained in w2v_model
+def get_keywords(corpus, textrank):
+    words = data['word_info']
+    keywords = [key for key in words]
+    
+    for words_in_each_movie in textrank:
+        words = [first for first, second in textrank]
+        keywords += words
+    
+    return keywords
+
+def get_sentences(files, keywords): # get sentences to be trained in w2v_model
     NO_NEED = ['x', 'eng', 'w', 'm', 'mq', 'mg']
     sentences = []
     for file in files:
@@ -69,9 +79,17 @@ def get_sentences(files): # get sentences to be trained in w2v_model
             line = srt[i].text
             words = pseg.cut(line)
             sentence = []
+            all_need = True
+            has_keyword = False
+
             for word, flag in words:
-                if flag not in NO_NEED:
-                    sentence.append(word)
+                if flag in NO_NEED:
+                    all_need = False
+                if word in keywords:
+                    has_keyword = True
+            
+            if all_need and has_keyword:
+                sentence = [word for word, flag in words]
             sentences.append(sentence)
     
     return sentences
@@ -85,6 +103,9 @@ def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sent
         w2v_model.build_vocab(sentence, update=True)
         w2v_model.train(sentence, total_examples = token_count, epochs = w2v_model.iter)
     """
+    token_count = sum([len(sentence) for sentence in sentences])
+    w2v_model.build_vocab(sentences, update=True)
+    w2v_model.train(sentences, total_examples = token_count, epochs = w2v_model.iter)
     logging.info('Get word2vec model')
     return w2v_model
 
@@ -102,8 +123,9 @@ def main():
 
     files = get_files() # files = ['1.srt', '2.srt', '3.srt']
     text_rank_words_10_test = get_text_rank_words_10_test(files = files)# 範例[[('毀滅', 'V'), ('聯盟', 'N'), ('相逢', 'V')], []] 10部測試電影依順序, 共300words
-    
-    sentences = get_sentences(files = files)
+    keywords = get_keywords(corpus, text_rank_words_10_test)
+
+    sentences = get_sentences(files = files, keywords = keywords)
     w2v_model = get_w2v_model(sentences = sentences)
     
     TSModel = TS(corpus, w2v_model)

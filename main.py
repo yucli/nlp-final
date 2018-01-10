@@ -38,10 +38,10 @@ def get_text_rank_words_10_test(files):
         # Write the lines to a .txt file
         with open('srt_lines.txt', 'w') as srt_txt:
             for i in range(len(srt)):
-                srt_txt.write(srt[i].text + '\n')
+                srt_txt.write(srt[i].text)
 
         textrank = analyse.textrank
-        content = open('srt_lines.txt', 'rb').read()
+        content = open('srt_lines.txt', 'r').read()
         keywords = textrank(content, topK = 30, allowPOS = (EXTRACT_POS))
 
         keywords_per_movie = []
@@ -61,11 +61,11 @@ def get_text_rank_words_10_test(files):
     return words_list
 
 def get_keywords(corpus, textrank):
-    words = data['word_info']
+    words = corpus['word_info']
     keywords = [key for key in words]
     
     for words_in_each_movie in textrank:
-        words = [first for first, second in textrank]
+        words = [first for first, second in words_in_each_movie]
         keywords += words
     
     return keywords
@@ -126,6 +126,9 @@ def main():
     keywords = get_keywords(corpus, text_rank_words_10_test)
 
     sentences = get_sentences(files = files, keywords = keywords)
+    print(text_rank_words_10_test)
+    print(sentences)
+    """
     w2v_model = get_w2v_model(sentences = sentences)
     
     TSModel = TS(corpus, w2v_model)
@@ -144,6 +147,7 @@ def main():
             print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
         logging.info('Write to ouput.txt')
+    """
 
 
 if __name__ == "__main__":

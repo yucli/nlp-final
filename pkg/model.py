@@ -47,6 +47,7 @@ class TermSelection(Model):
 		
 		for word, pos in test:
 			for trained_word in trained_words:
+				# print(word, trained_word)
 				temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
 		
 		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reversed = True)
@@ -59,6 +60,7 @@ class TermSelection(Model):
 	
 	def get_highest_scores_words(self, each_trained_words_num):
 		scores_words_sorted_by_score = sorted(self.selection_score.items(), key = lambda d: d[1], reverse = True)
+		scores_words_sorted_by_score = [word for word, score in scores_words_sorted_by_score]
 		words_num = self.movie_num * each_trained_words_num
 		return scores_words_sorted_by_score[:words_num]
 	

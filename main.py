@@ -124,15 +124,15 @@ def main():
     keywords = get_keywords(corpus, text_rank_words_10_test)
 
     sentences = get_sentences(files = files, keywords = keywords)
-    print(text_rank_words_10_test)
-    print(sentences)
-    """
+    # print(text_rank_words_10_test)
+    # print(sentences)
+    
     w2v_model = get_w2v_model(sentences = sentences)
     
     TSModel = TS(corpus, w2v_model)
     TOModel = TO(corpus)
     TLModel = TL(corpus)
-    logging.info('Construct models: term selection, term ordering, title length')
+    logging.info('Construct 3 models')
 
     pause_for_start_to_generate_titles()
 
@@ -145,8 +145,6 @@ def main():
             print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
         logging.info('Write to ouput.txt')
-    """
-
 
 if __name__ == "__main__":
     main()

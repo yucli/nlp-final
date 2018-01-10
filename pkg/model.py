@@ -3,11 +3,8 @@ import math
 
 class Model():
 	def __init__(self, corpus):
-		self.corpus = dict(corpus)
+		self.corpus = corpus
 		self.movie_num = len(self.corpus['movie_title'])
-		self.titles = list(self.corpus['movie_title'].keys())
-		self.terms_titles = [self.corpus['movie_title'][t]['word'] for t in self.titles]
-		self.terms_pos_titles = [self.corpus['movie_title'][t]['pos'] for t in self.titles]
 
 class TermSelection(Model):
 	def __init__(self, corpus, w2v_model):
@@ -47,7 +44,7 @@ class TermSelection(Model):
 		
 		for word, pos in test:
 			for trained_word in trained_words:
-				# print(word, trained_word)
+				print(word, trained_word)
 				temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
 		
 		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reversed = True)
@@ -57,6 +54,7 @@ class TermSelection(Model):
 	def construct_scores(self):
 		for word in self.word_info.keys():
 			self.get_selection_score(word)
+		print(self.selection_score)
 	
 	def get_highest_scores_words(self, each_trained_words_num):
 		scores_words_sorted_by_score = sorted(self.selection_score.items(), key = lambda d: d[1], reverse = True)
@@ -139,7 +137,9 @@ class TermSelection(Model):
 class TermOrdering(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
-		self.distro_pos = {} # distro means distribution
+		self.titles = list(self.corpus['movie_title'].keys())
+		self.terms_pos_titles = [self.corpus['movie_title'][t]['pos'] for t in self.titles]
+		self.distro_pos = {} # distro means distribution		
 		
 		for terms_pos in self.terms_pos_titles:
 			tuple_terms_pos = tuple(terms_pos)
@@ -246,8 +246,10 @@ class TermOrdering(Model):
 class TitleLength(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)
+		self.titles = list(self.corpus['movie_title'].keys())
+		self.terms_titles = [self.corpus['movie_title'][t]['word'] for t in self.titles]		
+		self.titles_lenchars = [len(t) for t in self.titles]
 		self.titles_lenterms = [len(t) for t in self.terms_titles]
-		self.titles_lenchars = [len(t) for t in self.titles]	
 		self.g1 = 1
 		self.g2 = 1
 
@@ -266,8 +268,8 @@ class TitleLength(Model):
 		lenchars = len(title)
 		N = self.movie_num
 		# 加1避免0在log的錯誤
-		p_term = (self.get_same_lenterms_num(lenterms = lenterms) + 1 ) / N
 		p_char = (self.get_same_lenchars_num(lenchars = lenchars) + 1 ) / N
+		p_term = (self.get_same_lenterms_num(lenterms = lenterms) + 1 ) / N
 
 		return math.log(math.pow(p_term, self.g1) * math.pow(p_char, self.g2), 2)
 	

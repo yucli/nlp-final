@@ -205,7 +205,7 @@ class TermOrdering(Model):
 			each_pos_words_length.append(len(classified_by_pos[pos]))
 		
 		generated_needed_terms_titles_length = 1
-		for num in range(len(each_pos_words_length)):
+		for num in each_pos_words_length:
 			generated_needed_terms_titles_length *= num
 
 		for i in range(generated_needed_terms_titles_length):
@@ -215,9 +215,9 @@ class TermOrdering(Model):
 		for reverse in reversed(range(len(each_pos_words_length))): # 假如最後的字較重要
 			pos = ordered_pos[reverse]
 			pos_words_length = each_pos_words_length[reverse] # 或 len(classified_by_pos[pos])
-			in_length = every_length / pos_words_length #every中有幾個
+			in_length = int(every_length / pos_words_length) #every中有幾個
 			# insert
-			iterate_times = generated_needed_terms_titles_length / every_length
+			iterate_times = int(generated_needed_terms_titles_length / every_length)
 			for i in range(pos_words_length):
 				word = classified_by_pos[pos][i]
 				insert_positions = []
@@ -272,6 +272,7 @@ class TitleLength(Model):
 		p_term = (self.get_same_lenterms_num(lenterms = lenterms) + 1 ) / N
 
 		return math.log(math.pow(p_term, self.g1) * math.pow(p_char, self.g2), 2)
+		# return math.log(math.pow(p_term, self.g1), 2)
 	
 	def get_same_lenchars_num(self, lenchars):
 		num = 0

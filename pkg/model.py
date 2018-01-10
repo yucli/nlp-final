@@ -44,8 +44,8 @@ class TermSelection(Model):
 		
 		for word, pos in test:
 			for trained_word in trained_words:
-				print(word, trained_word)
 				temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
+				# print(word, trained_word, temp_dictionary[(word, pos, trained_word)])
 		
 		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reversed = True)
 		generated_words_sorted_by_similarity = [(triple_cos[0][0], triple_cos[0][1]) for triple_cos in temp_sorted_list] # tripler_cos == (('w', 'w_pos', 'test_w'), cos_value)
@@ -54,7 +54,7 @@ class TermSelection(Model):
 	def construct_scores(self):
 		for word in self.word_info.keys():
 			self.get_selection_score(word)
-		print(self.selection_score)
+		# print(self.selection_score)
 	
 	def get_highest_scores_words(self, each_trained_words_num):
 		scores_words_sorted_by_score = sorted(self.selection_score.items(), key = lambda d: d[1], reverse = True)

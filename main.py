@@ -18,7 +18,7 @@ def get_corpus():
     with open('corpus.json', 'r', encoding = 'UTF-8') as fr:
         json_corpus = json.load(fr)
 
-    logging.info('Get trainning corpus')
+    # logging.info('Get trainning corpus')
     return json_corpus
 
 def get_files():
@@ -104,14 +104,14 @@ def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sent
     token_count = sum([len(sentence) for sentence in sentences])
     w2v_model.build_vocab(sentences, update=True)
     w2v_model.train(sentences, total_examples = token_count, epochs = w2v_model.iter)
-    logging.info('Get word2vec model')
+    # logging.info('Get word2vec model')
     return w2v_model
 
 def pause_for_start_to_generate_titles():
-    start = input()
+    start = input('key start: ')
     while start != 'start':
         start = input()
-    logging.info('Generate titles')
+    # logging.info('Generate titles')
 
 def main():
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -132,7 +132,7 @@ def main():
     TSModel = TS(corpus, w2v_model)
     TOModel = TO(corpus)
     TLModel = TL(corpus)
-    logging.info('Construct 3 models')
+    # logging.info('Construct 3 models')
 
     pause_for_start_to_generate_titles()
 
@@ -144,7 +144,7 @@ def main():
         for i in range(len(generated_title_10_test)):
             print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
-        logging.info('Write to ouput.txt')
+        # logging.info('Write to ouput.txt')
 
 if __name__ == "__main__":
     main()

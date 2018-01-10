@@ -78,19 +78,17 @@ def get_sentences(files, keywords): # get sentences to be trained in w2v_model
         for i in range(len(srt)):
             line = srt[i].text
             words = pseg.cut(line)
+            
             sentence = []
-            all_need = True
             has_keyword = False
-
             for word, flag in words:
-                if flag in NO_NEED:
-                    all_need = False
+                if flag not in NO_NEED:
+                    sentence.append(word)
                 if word in keywords:
                     has_keyword = True
             
-            if all_need and has_keyword:
-                sentence = [word for word, flag in words]
-            sentences.append(sentence)
+            if has_keyword:
+                sentences.append(sentence)
     
     return sentences
 

@@ -15,11 +15,11 @@ class TermSelection(Model):
 		self.w2v_model = w2v_model
 		self.word_info = self.corpus['word_info']  # word_info之後與text_rank_words_num_test做處理
 		self.selection_score = {} # selection_score['聯盟'] == 9487
-		self.pos_score = 0.08 # 給pos分, 目前假如是n, v
-		self.ne_score = 0.2 # 暫時
+		self.pos_score = 0.08 # 給pos分, 目前假如是n (0.08 * 1.2 = 0.096), v(0.08)
+		self.ne_score = 0.22 # 暫時
 		self.title_score = {}
 		self.g_score = {} # 自己的nbl變形
-		self.r_score = {}
+		# self.r_score = {} # 暫時去掉
 		self.construct_scores()
 
 	def gen_words_num_test(self, text_rank_words_num_test, each_trained_words_num):
@@ -66,22 +66,28 @@ class TermSelection(Model):
 		if word not in self.selection_score.keys():
 			self.selection_score[word] = self.get_pos_score(word) \
 				+ self.get_ne_score(word) \
-				+ math.log(self.get_title_score(word = word) * self.get_g_score(word = word), 10) \
-				+ self.get_r_score(word = word)
+				+ math.log(self.get_title_score(word = word) * self.get_g_score(word = word), 10) # \
+				# + self.get_r_score(word = word)
 		
 		return self.selection_score[word]
 
 	def get_pos_score(self, word):
+		word_pos_score = 0
+		
 		if self.word_info[word]['pos'] in ['n', 'v']:
-			return self.pos_score
-		else:
-			return 0
+			word_pos_score = self.pos_score
+			if self.word_info[word]['pos'] == 'n':
+				word_pos_score *= 1.2
+		
+		return word_pos_score
 
 	def get_ne_score(self, word):
+		word_ne_score = 0
+		
 		if self.word_info[word]['ne'] == True:
-			return self.ne_score
-		else:
-			return 0
+			word_ne_score = self.ne_score
+
+		return word_ne_score
 
 	def get_title_score(self, word):
 		if word not in self.title_score.keys():
@@ -95,11 +101,13 @@ class TermSelection(Model):
 
 		return self.g_score[word]
 
+	"""
 	def get_r_score(self, word):
 		if word not in self.r_score.keys():
 			self.r_score[word] =  self.get_title_score(word = word) + self.get_g_score(word = word)
 		
 		return self.r_score[word]
+	"""
 
 	def get_g_score_numerator(self, word):
 		# 加1避免0在log的錯誤
@@ -121,6 +129,7 @@ class TermSelection(Model):
 		return numerator
 
 	def get_g_score_denominator(self, word):
+		# 加1避免除0錯誤
 		denominator = len(self.word_info[word]['word_in_subs']) + 1
 		return denominator
 

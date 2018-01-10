@@ -28,15 +28,17 @@ def get_files():
     return files
 
 def get_text_rank_words_10_test(files):
+    NOUN = ['n', 'nr', 'ns', 'nt', 'nz', 'ng']
+    VERB = ['v', 'vg', 'vd', 'vn']
     EXTRACT_POS = ['n', 'nr', 'ns', 'nt', 'nz', 'ng', 'v', 'vg', 'vd', 'vn', 'nr', 'ns', 'nt', 'nz']
     words_list = []
 
     for file in files:
-        srt = pysrt.open(file, encoding='utf-8')
+        srt = pysrt.open(os.path.join('input', file), encoding='utf-8')
         # Write the lines to a .txt file
         with open('srt_lines.txt', 'w') as srt_txt:
             for i in range(len(srt)):
-                srt_txt.write(srt[i].text.encode('utf-8') + '\n')
+                srt_txt.write(srt[i].text.encode('utf-8').decode('utf-8') + '\n')
 
         textrank = analyse.textrank
         content = open('srt_lines.txt', 'rb').read()
@@ -45,7 +47,7 @@ def get_text_rank_words_10_test(files):
         keywords_per_movie = []
         # Do posseg to each keywords to get their pos taggings
         for word in keywords:
-            words = pseg.cut(w)
+            words = pseg.cut(word)
             for word, flag in words:
                 if flag in NOUN:
                     pos = 'n'
@@ -62,7 +64,7 @@ def get_sentences(files): # get sentences to be trained in w2v_model
     NO_NEED = ['x', 'eng', 'w', 'm', 'mq', 'mg']
     sentences = []
     for file in files:
-        srt = pysrt.open(file, encoding = 'utf-8')
+        srt = pysrt.open(os.path.join('input', file), encoding = 'utf-8')
         for i in range(len(srt)):
             line = srt[i].text.encode('utf-8')
             words = pseg.cut(line)
@@ -77,9 +79,10 @@ def get_sentences(files): # get sentences to be trained in w2v_model
 def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sentence'], ['second', 'sentence']]
     w2v_model = models.Word2Vec.load('med250.model.bin')
     # Train the model again with new sentences
+    token_count = sum([len(sentence) for sentence in sentences])
     for sentence in sentences:
-        model.build_vocab(sentence, update=True)
-        model.train(sentence)
+        w2v_model.build_vocab(sentence, update=True)
+        w2v_model.train(sentence, total_examples = token_count, epochs = w2v_model.iter)
  
     logging.info('Get word2vec model')
     return w2v_model

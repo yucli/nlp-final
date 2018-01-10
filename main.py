@@ -38,7 +38,7 @@ def get_text_rank_words_10_test(files):
         # Write the lines to a .txt file
         with open('srt_lines.txt', 'w') as srt_txt:
             for i in range(len(srt)):
-                srt_txt.write(srt[i].text.encode('utf-8').decode('utf-8') + '\n')
+                srt_txt.write(srt[i].text + '\n')
 
         textrank = analyse.textrank
         content = open('srt_lines.txt', 'rb').read()
@@ -66,7 +66,7 @@ def get_sentences(files): # get sentences to be trained in w2v_model
     for file in files:
         srt = pysrt.open(os.path.join('input', file), encoding = 'utf-8')
         for i in range(len(srt)):
-            line = srt[i].text.encode('utf-8')
+            line = srt[i].text
             words = pseg.cut(line)
             sentence = []
             for word, flag in words:
@@ -79,11 +79,12 @@ def get_sentences(files): # get sentences to be trained in w2v_model
 def get_w2v_model(sentences): # get word2vec model, sentences = [['first', 'sentence'], ['second', 'sentence']]
     w2v_model = models.Word2Vec.load('med250.model.bin')
     # Train the model again with new sentences
+    """
     token_count = sum([len(sentence) for sentence in sentences])
     for sentence in sentences:
         w2v_model.build_vocab(sentence, update=True)
         w2v_model.train(sentence, total_examples = token_count, epochs = w2v_model.iter)
- 
+    """
     logging.info('Get word2vec model')
     return w2v_model
 

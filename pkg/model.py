@@ -58,8 +58,8 @@ class TermSelection(Model):
 			self.get_selection_score(word)
 	
 	def get_highest_scores_words(self, each_trained_words_num):
-		scores_words_sorted_by_score = sorted(self.selection_score.items(), lambda d: d[1], reverse = True)
-		words_num = self.movie_num * each_words_num
+		scores_words_sorted_by_score = sorted(self.selection_score.items(), key = lambda d: d[1], reverse = True)
+		words_num = self.movie_num * each_trained_words_num
 		return scores_words_sorted_by_score[:words_num]
 	
 	def get_selection_score(self, word):

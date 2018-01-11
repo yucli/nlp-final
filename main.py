@@ -141,7 +141,7 @@ def main():
     generated_terms_titles_10_test = TOModel.gen_terms_titles_num_test(generated_words_10_test, candidates_num = 120)
     generated_title_10_test = TLModel.gen_title_num_test(generated_terms_titles_10_test)
 
-    with open('output.txt', 'w', encoding = 'UTF-8') as fw:
+    with open('task1_group9.txt', 'w', encoding = 'UTF-8') as fw:
         for i in range(len(generated_title_10_test)):
             print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')

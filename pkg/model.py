@@ -22,6 +22,7 @@ class TermSelection(Model):
 	def gen_words_num_test(self, text_rank_words_num_test, each_trained_words_num):
 		generated_words_num_test = []
 		trained_words = self.get_highest_scores_words(each_trained_words_num = each_trained_words_num)
+		# trained_words =  list(self.selection_score.keys()) # all trained words are considered
 		test_words_num = each_trained_words_num * 3
 		
 		for test in text_rank_words_num_test:
@@ -43,12 +44,13 @@ class TermSelection(Model):
 		temp_dictionary = {}
 		
 		for word, pos in test:
-			for trained_word in trained_words:
-				try:
-					temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
-				except KeyError:
-					temp_dictionary[(word, pos, trained_word)] = 0
-				# print(word, trained_word, temp_dictionary[(word, pos, trained_word)])
+			if len(word) > 1:
+				for trained_word in trained_words:
+					try:
+						temp_dictionary[(word, pos, trained_word)] = self.w2v_model.similarity(word, trained_word)
+					except KeyError:
+						temp_dictionary[(word, pos, trained_word)] = 0
+					# print(word, trained_word, temp_dictionary[(word, pos, trained_word)])
 		
 		temp_sorted_list = sorted(temp_dictionary.items(), key = lambda d: d[1], reverse = True)
 		generated_words_sorted_by_similarity = [(triple_cos[0][0], triple_cos[0][1]) for triple_cos in temp_sorted_list] # tripler_cos == (('w', 'w_pos', 'test_w'), cos_value)
@@ -238,14 +240,29 @@ class TermOrdering(Model):
 
 		# remove duplicate words
 		for title_i in range(len(generated_needed_terms_titles)):
-			for word in generated_needed_terms_titles[title_i]:
-				if generated_needed_terms_titles[title_i].count(word) > 1:
-					generated_needed_terms_titles[title_i]
-					break
+			title_terms = list(generated_needed_terms_titles[title_i])
+			for word_i in range(len(title_terms)):
+				for word_j in range(len(title_terms)):
+					if word_i != word_j:
+						if len(self.longestSubstringFinder(title_terms[word_i], title_terms[word_j])) == 0:
+							generated_needed_terms_titles[title_i] = []
+							break
 		generated_needed_terms_titles = [t for t in generated_needed_terms_titles if t != []]
 		
 		return generated_needed_terms_titles[:ordered_pos_needed_num]
 
+	def longestSubstringFinder(self, string1, string2):
+		answer = ""
+		len1, len2 = len(string1), len(string2)
+		for i in range(len1):
+			match = ""
+			for j in range(len2):
+				if (i + j < len1 and string1[i + j] == string2[j]):
+					match += string2[j]
+				else:
+					if (len(match) > len(answer)): answer = match
+					match = ""
+		return answer
 class TitleLength(Model):
 	def __init__(self, corpus):
 		super().__init__(corpus)

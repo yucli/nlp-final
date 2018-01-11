@@ -36,12 +36,12 @@ def get_text_rank_words_10_test(files):
     for file in files:
         srt = pysrt.open(os.path.join('input', file), encoding='utf-8')
         # Write the lines to a .txt file
-        with open('srt_lines.txt', 'w') as srt_txt:
+        with open('srt_lines.txt', 'w', encoding = 'UTF-8') as srt_txt:
             for i in range(len(srt)):
                 srt_txt.write(srt[i].text)
 
         textrank = analyse.textrank
-        content = open('srt_lines.txt', 'r').read()
+        content = open('srt_lines.txt', 'r', encoding = 'UTF-8').read()
         keywords = textrank(content, topK = 30, allowPOS = (EXTRACT_POS))
 
         keywords_per_movie = []
@@ -143,8 +143,8 @@ def main():
 
     with open('task1_group9.txt', 'w', encoding = 'UTF-8') as fw:
         for i in range(len(generated_title_10_test)):
-            print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')
             fw.write('\t'.join([files[i].rstrip('.srt'), generated_title_10_test[i]]) + '\n')
+            # print(files[i].rstrip('.srt'), generated_title_10_test[i], sep = '\t')     
         # logging.info('Write to ouput.txt')
 
 if __name__ == "__main__":
